@@ -3,6 +3,7 @@ from pynput import mouse
 from time import sleep
 import pydirectinput
 import screeninfo
+import pyautogui
 
 class MyApp:
     def __init__(self, root):
@@ -30,6 +31,16 @@ class MyApp:
         # Create a button widget labeled "Ultrasequencer"
         self.ultrasequencer_button = tk.Button(self.frame, text="Ultrasequencer", font=("Arial", 32), bg="white", command=lambda: self.ultrasequencer())
         self.ultrasequencer_button.pack(pady=10)
+
+        # Add menu bar labbeled "Experimental" with checkboxes for each experimental feature
+        self.menu_bar = tk.Menu(self.root)
+        self.root.config(menu=self.menu_bar)
+        self.experimental_menu = tk.Menu(self.menu_bar, tearoff=0)
+
+        self.menu_bar.add_cascade(label="Experimental", menu=self.experimental_menu)
+        self.screen_region_var = tk.BooleanVar()
+        self.screen_region_var.set(False)
+        self.experimental_menu.add_checkbutton(label="Screen Region", variable=self.screen_region_var, onvalue=True, offvalue=False)
 
         # Initialize the recording variable
         self.recording = False
@@ -99,6 +110,18 @@ class MyApp:
             self.test_location_button.destroy()
         except:
             pass
+        try:
+            self.experimental_menu.destroy()
+        except:
+            pass
+        try:
+            self.menu_bar.destroy()
+        except:
+            pass
+        try:
+            self.clear_order_button.destroy()
+        except:
+            pass
 
     def chronomatron(self):
         self.destroy_wigets()
@@ -125,29 +148,34 @@ class MyApp:
         # Create a label widget with Chronomatron (High) Solver text
         self.chronomatron_label = tk.Label(self.frame, text="Chronomatron (High) solver", font=("Arial", 30), bg="white")
         self.chronomatron_label.pack(pady=10)
-        
-        # create a label widget with text "select location of each color"
-        self.chronomatron_instruction_label = tk.Label(self.frame, text="Select location of each color", font=("Arial", 20), bg="white")
-        self.chronomatron_instruction_label.pack(pady=10)
 
-        if experiment_level == "High":
-            self.experiment_high()
-        elif experiment_level == "Grand":
-            self.experiment_grand()
-        elif experiment_level == "Supreme":
-            self.experiment_supreme()
-        elif experiment_level == "Transcendent":
-            self.experiment_transcendent()
-        elif experiment_level == "Metaphysical":
-            self.experiment_metaphysical()
+        if self.screen_region_var.get():
+            ## create a button widget labeled "select location"
+            self.select_location_button = tk.Button(self.frame, text="Select location", font=("Arial", 20), bg="white", command=lambda: self.select_screen_region_popup())
+            self.select_location_button.pack(pady=10)
+        else:
+            # create a label widget with text "select location of each color"
+            self.chronomatron_instruction_label = tk.Label(self.frame, text="Select location of each color", font=("Arial", 20), bg="white")
+            self.chronomatron_instruction_label.pack(pady=10)
 
-        # create a button widget labeled "select location"
-        self.select_location_button = tk.Button(self.frame, text="Select location", font=("Arial", 20), bg="white", command=lambda: self.start_recording(self.color_select.get()))
-        self.select_location_button.pack(pady=10)
+            if experiment_level == "High":
+                self.experiment_high()
+            elif experiment_level == "Grand":
+                self.experiment_grand()
+            elif experiment_level == "Supreme":
+                self.experiment_supreme()
+            elif experiment_level == "Transcendent":
+                self.experiment_transcendent()
+            elif experiment_level == "Metaphysical":
+                self.experiment_metaphysical()
 
-        # Create a buttpm widget called order with text "Test Location"
-        self.test_location_button = tk.Button(self.frame, text="Test Location", font=("Arial", 20), bg="white", command=lambda: self.test_color_location(self.color_select.get()))
-        self.test_location_button.pack(pady=10)
+            # create a button widget labeled "select location"
+            self.select_location_button = tk.Button(self.frame, text="Select location", font=("Arial", 20), bg="white", command=lambda: self.start_recording(self.color_select.get()))
+            self.select_location_button.pack(pady=10)
+
+            # Create a buttpm widget called order with text "Test Location"
+            self.test_location_button = tk.Button(self.frame, text="Test Location", font=("Arial", 20), bg="white", command=lambda: self.test_color_location(self.color_select.get()))
+            self.test_location_button.pack(pady=10)
 
         # Create a label widget called order with text "Order: "
         self.order_label = tk.Label(self.frame, text="Current Order: ", font=("Arial", 20), bg="white")
@@ -173,7 +201,6 @@ class MyApp:
     def test_color_location(self, color=None):
         if color == None:
             return
-        "Red", "Blue", "Lime", "Yellow", "Light Blue", "Pink", "Dark Green", "Cyan", "Orange", "Purple"
         try:
             if color == "Red":
                 x, y = self.red_color_location
@@ -201,7 +228,6 @@ class MyApp:
         except ValueError:
             print('Error: ' + '"' + color + '"' + ' location not found')
             return
-        print(x, y)
         self.MouseMoveTo(x, y)
     
     def experiment_high(self):
@@ -217,7 +243,7 @@ class MyApp:
         # Create a dropdown widget labeled "color_select"
         self.color_select = tk.StringVar()
         self.color_select.set("Select a color")
-        self.color_select_dropdown = tk.OptionMenu(self.frame, self.color_select, "Red", "Blue", "Lime", "Yellow", "Cyan")
+        self.color_select_dropdown = tk.OptionMenu(self.frame, self.color_select, "Red", "Blue", "Lime", "Yellow", "Light Blue")
         self.color_select_dropdown.config(font=("Arial", 20), bg="white", width=20)
         self.color_select_dropdown["menu"].config(font=("Arial", 20))
         self.color_select_dropdown.pack(pady=10)
@@ -262,7 +288,63 @@ class MyApp:
     def select_location(self, x, y, button, pressed):
         if self.recording and button == mouse.Button.left and pressed:
             self.update_color_location(self.color_select.get(), x, y)
-            self.recording = False    
+            self.recording = False 
+
+    def determin_color_location(self, experiment_level):
+        if experiment_level == "High":
+            x_distance_between_colors = (self.bottom_right_corner[0] - self.top_left_corner[0]) / 3
+            y_distance_between_colors = (self.bottom_right_corner[1] - self.top_left_corner[1]) / 3
+            experiment_level_number = 1
+        elif experiment_level == "Grand":
+            x_distance_between_colors = (self.bottom_right_corner[0] - self.top_left_corner[0]) / 5
+            y_distance_between_colors = (self.bottom_right_corner[1] - self.top_left_corner[1]) / 3
+            experiment_level_number = 2
+        elif experiment_level == "Supreme":
+            x_distance_between_colors = (self.bottom_right_corner[0] - self.top_left_corner[0]) / 7
+            y_distance_between_colors = (self.bottom_right_corner[1] - self.top_left_corner[1]) / 3
+            experiment_level_number = 3
+        elif experiment_level == "Transcendent":
+            x_distance_between_colors = (self.bottom_right_corner[0] - self.top_left_corner[0]) / 5
+            y_distance_between_colors = (self.bottom_right_corner[1] - self.top_left_corner[1]) / 2
+            experiment_level_number = 4
+        elif experiment_level == "Metaphysical":
+            x_distance_between_colors = (self.bottom_right_corner[0] - self.top_left_corner[0]) / 5
+            y_distance_between_colors = (self.bottom_right_corner[1] - self.top_left_corner[1]) / 2
+            experiment_level_number = 5
+        else:
+            print("Error: invalid experiment level")
+            return
+        
+        if experiment_level_number >= 1:
+            self.red_color_location = self.top_left_corner[0] + x_distance_between_colors / 2, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 1.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.lime_color_location = self.top_left_corner[0] + x_distance_between_colors * 2.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+        elif experiment_level >= 2:
+            self.yellow_color_location = self.top_left_corner[0] + x_distance_between_colors * 3.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.light_blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+        elif experiment_level >= 3:
+            self.pink_color_location = self.top_left_corner[0] + x_distance_between_colors * 5.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.dark_green_color_location = self.top_left_corner[0] + x_distance_between_colors * 6.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+        elif experiment_level >= 4:
+            self.red_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.blue_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.lime_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.yellow_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.light_blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 1.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.pink_color_location = self.top_left_corner[0] + x_distance_between_colors * 2.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.dark_green_color_location = self.top_left_corner[0] + x_distance_between_colors * 3.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.cyan_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+        elif experiment_level >= 5:
+            self.red_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.lime_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.blue_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.yellow_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.light_blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.pink_color_location = self.top_left_corner[0] + x_distance_between_colors / 2, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.dark_green_color_location = self.top_left_corner[0] + x_distance_between_colors * 1.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.cyan_color_location = self.top_left_corner[0] + x_distance_between_colors * 2.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.orange_color_location = self.top_left_corner[0] + x_distance_between_colors * 3.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.purple_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
 
     def update_color_location(self, color=None, x=None, y=None):
         if color == None or x == None or y == None:
@@ -290,6 +372,60 @@ class MyApp:
         else:
             print("Error: invalid color")
             return
+        
+    def update_corner_location(self, corner, x, y):
+        if corner == "top left":
+            self.top_left_corner = (x, y)
+            print(self.top_left_corner)    
+        elif corner == "bottom right":
+            self.bottom_right_corner = (x, y)
+            print(self.bottom_right_corner)
+        else:
+            print("Error: invalid corner")
+            return
+                
+    def select_location_screen(self, x, y, button, pressed):
+        if self.recording and button == mouse.Button.left and pressed:
+            self.update_corner_location(self.corner, x, y)
+            self.recording = False
+
+    def select_screen_region(self, corner=None):
+        if corner == None:
+            return
+        self.corner = corner
+        self.recording = True
+        self.mouse_listener = mouse.Listener(on_click=self.select_location_screen)
+        self.mouse_listener.start()
+        
+    def select_screen_region_popup(self):
+        '''
+        This function will allow the user to select a region of the screen
+        '''
+        # Creates a popup window that tells you to click on the top left corner of the screen region
+        select_screen_popup = tk.Toplevel(self.root)
+        select_screen_popup.title("Select Screen Region")
+        select_screen_popup.geometry("650x350")
+        label = tk.Label(select_screen_popup, text="Click on the top left corner of the screen region", font=("Arial", 16))
+        label.pack(pady=20)
+
+        # Creates a button that will allow the user to select the top left corner of the screen region
+        top_left_button = tk.Button(select_screen_popup, text="Top Left", font=("Arial", 15), bg="white", fg="black", command=lambda: self.select_screen_region("top left"))
+        top_left_button.pack(pady=4)
+
+        # Creates a button that tells you to click on the bottom right corner of the screen region
+        bottom_right_button = tk.Button(select_screen_popup, text="Bottom Right", font=("Arial", 14), bg="white", fg="black", command=lambda: self.select_screen_region("bottom right"))
+        bottom_right_button.pack(pady=10)
+
+        # Creates a button that will allow you to confirm the screen region
+        confirm_button = tk.Button(select_screen_popup, text="Confirm", font=("Arial", 14), bg="white", fg="green", command=lambda: self.determin_color_location(self.experiment_select.get()))
+        confirm_button.pack(pady=10)
+
+        # Creates a button that will allow you to close the popup window
+        close_button = tk.Button(select_screen_popup, text="Close", font=("Arial", 14), command=select_screen_popup.destroy)
+        close_button.pack(pady=10)
+
+        # Allows the user to close the popup window by pressing the escape key
+        select_screen_popup.bind("<Escape>", lambda e: select_screen_popup.destroy())
 
     def start_solver_popup(self, experiment_level="High"):
         popup = tk.Toplevel(self.root)
