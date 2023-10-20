@@ -43,6 +43,10 @@ class MyApp:
         self.screen_region_var.set(False)
         self.experimental_menu.add_checkbutton(label="Screen Region", variable=self.screen_region_var, onvalue=True, offvalue=False)
 
+        if not os.path.isfile("file_memory.txt"):
+            with open("file_memory.txt", "w+") as file:
+                file.write("False\n0\n0\n0\n0\n")
+
         with open("file_memory.txt", "r") as file:
             lines = file.readlines()
             if len(lines):
