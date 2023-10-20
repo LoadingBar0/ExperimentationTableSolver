@@ -4,6 +4,7 @@ from time import sleep
 import pydirectinput
 import screeninfo
 import pyautogui
+import os
 
 class MyApp:
     def __init__(self, root):
@@ -36,11 +37,18 @@ class MyApp:
         self.menu_bar = tk.Menu(self.root)
         self.root.config(menu=self.menu_bar)
         self.experimental_menu = tk.Menu(self.menu_bar, tearoff=0)
-
         self.menu_bar.add_cascade(label="Experimental", menu=self.experimental_menu)
+
         self.screen_region_var = tk.BooleanVar()
         self.screen_region_var.set(False)
         self.experimental_menu.add_checkbutton(label="Screen Region", variable=self.screen_region_var, onvalue=True, offvalue=False)
+
+        with open("file_memory.txt", "r") as file:
+            lines = file.readlines()
+            if len(lines):
+                if lines[0].strip() == "True": self.screen_region_var.set(True)
+                self.top_left_corner = int(lines[1].strip()), int(lines[2].strip())
+                self.bottom_right_corner = int(lines[3].strip()), int(lines[4].strip())
 
         # Initialize the recording variable
         self.recording = False
@@ -49,6 +57,13 @@ class MyApp:
         self.red_color_location = ()
         self.blue_color_location = ()
         self.lime_color_location = ()
+        self.yellow_color_location = ()
+        self.light_blue_color_location = ()
+        self.pink_color_location = ()
+        self.dark_green_color_location = ()
+        self.cyan_color_location = ()
+        self.orange_color_location = ()
+        self.purple_color_location = ()
 
         # Initialize the screen size variables
         self.getscreensize()
@@ -146,17 +161,32 @@ class MyApp:
         self.destroy_wigets()
         
         # Create a label widget with Chronomatron (High) Solver text
-        self.chronomatron_label = tk.Label(self.frame, text="Chronomatron (High) solver", font=("Arial", 30), bg="white")
+        self.chronomatron_label = tk.Label(self.frame, text="Chronomatron (" + experiment_level + ") solver", font=("Arial", 30), bg="white")
         self.chronomatron_label.pack(pady=10)
 
         if self.screen_region_var.get():
+            with open("file_memory.txt", "r") as file:
+                lines = file.readlines()
+                if len(lines):
+                    if lines[0].strip() != "True": lines[0] = "True\n"
+                    self.determin_color_location(experiment_level)
+            
+            with open ("file_memory.txt", "w+") as file:
+                file.writelines(lines)
+            
             ## create a button widget labeled "select location"
-            self.select_location_button = tk.Button(self.frame, text="Select location", font=("Arial", 20), bg="white", command=lambda: self.select_screen_region_popup())
+            self.select_location_button = tk.Button(self.frame, text="Select location", font=("Arial", 20), bg="white", command=lambda: self.select_screen_region_popup(experiment_level))
             self.select_location_button.pack(pady=10)
         else:
             # create a label widget with text "select location of each color"
             self.chronomatron_instruction_label = tk.Label(self.frame, text="Select location of each color", font=("Arial", 20), bg="white")
             self.chronomatron_instruction_label.pack(pady=10)
+
+            with open("file_memory.txt", "w+") as file:
+                lines = file.readlines()
+                if len(lines):
+                    if lines[0].strip() != "False": lines[0] = "False\n"
+                    file.writelines(lines)
 
             if experiment_level == "High":
                 self.experiment_high()
@@ -305,11 +335,11 @@ class MyApp:
             experiment_level_number = 3
         elif experiment_level == "Transcendent":
             x_distance_between_colors = (self.bottom_right_corner[0] - self.top_left_corner[0]) / 5
-            y_distance_between_colors = (self.bottom_right_corner[1] - self.top_left_corner[1]) / 2
+            y_distance_between_colors = (self.bottom_right_corner[1] - self.top_left_corner[1]) / 4
             experiment_level_number = 4
         elif experiment_level == "Metaphysical":
             x_distance_between_colors = (self.bottom_right_corner[0] - self.top_left_corner[0]) / 5
-            y_distance_between_colors = (self.bottom_right_corner[1] - self.top_left_corner[1]) / 2
+            y_distance_between_colors = (self.bottom_right_corner[1] - self.top_left_corner[1]) / 4
             experiment_level_number = 5
         else:
             print("Error: invalid experiment level")
@@ -319,26 +349,18 @@ class MyApp:
             self.red_color_location = self.top_left_corner[0] + x_distance_between_colors / 2, self.top_left_corner[1] + y_distance_between_colors * 1.5
             self.blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 1.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
             self.lime_color_location = self.top_left_corner[0] + x_distance_between_colors * 2.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
-        elif experiment_level >= 2:
+        if experiment_level_number >= 2:
             self.yellow_color_location = self.top_left_corner[0] + x_distance_between_colors * 3.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
             self.light_blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
-        elif experiment_level >= 3:
+        if experiment_level_number >= 3:
             self.pink_color_location = self.top_left_corner[0] + x_distance_between_colors * 5.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
             self.dark_green_color_location = self.top_left_corner[0] + x_distance_between_colors * 6.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
-        elif experiment_level >= 4:
-            self.red_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
-            self.blue_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
-            self.lime_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
-            self.yellow_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+        if experiment_level_number >= 4:
             self.light_blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 1.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
             self.pink_color_location = self.top_left_corner[0] + x_distance_between_colors * 2.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
             self.dark_green_color_location = self.top_left_corner[0] + x_distance_between_colors * 3.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
             self.cyan_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
-        elif experiment_level >= 5:
-            self.red_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
-            self.lime_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
-            self.blue_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
-            self.yellow_color_location[1] = self.top_left_corner[1] + y_distance_between_colors * 1.5
+        if experiment_level_number >= 5:
             self.light_blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
             self.pink_color_location = self.top_left_corner[0] + x_distance_between_colors / 2, self.top_left_corner[1] + y_distance_between_colors * 2.5
             self.dark_green_color_location = self.top_left_corner[0] + x_distance_between_colors * 1.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
@@ -376,10 +398,20 @@ class MyApp:
     def update_corner_location(self, corner, x, y):
         if corner == "top left":
             self.top_left_corner = (x, y)
-            print(self.top_left_corner)    
+            with open("file_memory.txt", "r") as file:
+                lines = file.readlines()
+                lines[1] = str(x) + "\n"
+                lines[2] = str(y) + "\n"
+            with open("file_memory.txt", "w+") as file:
+                file.writelines(lines)  
         elif corner == "bottom right":
             self.bottom_right_corner = (x, y)
-            print(self.bottom_right_corner)
+            with open("file_memory.txt", "r") as file:
+                lines = file.readlines()
+                lines[3] = str(x) + "\n"
+                lines[4] = str(y) + "\n"
+            with open("file_memory.txt", "w+") as file:
+                file.writelines(lines)  
         else:
             print("Error: invalid corner")
             return
@@ -397,7 +429,7 @@ class MyApp:
         self.mouse_listener = mouse.Listener(on_click=self.select_location_screen)
         self.mouse_listener.start()
         
-    def select_screen_region_popup(self):
+    def select_screen_region_popup(self, experiment_level="High"):
         '''
         This function will allow the user to select a region of the screen
         '''
@@ -417,7 +449,7 @@ class MyApp:
         bottom_right_button.pack(pady=10)
 
         # Creates a button that will allow you to confirm the screen region
-        confirm_button = tk.Button(select_screen_popup, text="Confirm", font=("Arial", 14), bg="white", fg="green", command=lambda: self.determin_color_location(self.experiment_select.get()))
+        confirm_button = tk.Button(select_screen_popup, text="Confirm", font=("Arial", 14), bg="white", fg="green", command=lambda: self.determin_color_location(experiment_level))
         confirm_button.pack(pady=10)
 
         # Creates a button that will allow you to close the popup window
@@ -465,16 +497,16 @@ class MyApp:
         if experiment_level_number >= 2:
             yellow_button = tk.Button(popup, text="yellow", font=("Arial", 15), bg="white", fg="yellow", command=lambda: self.update_order_list("Yellow"))
             yellow_button.pack(pady=4)
-            light_blue_button = tk.Button(popup, text="cyan", font=("Arial", 15), bg="white", fg="light blue", command=lambda: self.update_order_list("Light Blue"))
+            light_blue_button = tk.Button(popup, text="Light Blue", font=("Arial", 15), bg="white", fg="light blue", command=lambda: self.update_order_list("Light_Blue"))
             light_blue_button.pack(pady=4)
         if experiment_level_number >= 3:
-            cyan_button = tk.Button(popup, text="light blue", font=("Arial", 15), bg="white", fg="cyan", command=lambda: self.update_order_list("Cyan"))
-            cyan_button.pack(pady=4)
             pink_button = tk.Button(popup, text="pink", font=("Arial", 15), bg="white", fg="pink", command=lambda: self.update_order_list("Pink"))
             pink_button.pack(pady=4)
-        if experiment_level_number >= 4:
-            dark_green_button = tk.Button(popup, text="dark green", font=("Arial", 15), bg="white", fg="dark green", command=lambda: self.update_order_list("Dark Green"))
+            dark_green_button = tk.Button(popup, text="dark green", font=("Arial", 15), bg="white", fg="dark green", command=lambda: self.update_order_list("Dark_Green"))
             dark_green_button.pack(pady=4)
+        if experiment_level_number >= 4:
+            cyan_button = tk.Button(popup, text="cyan", font=("Arial", 15), bg="white", fg="cyan", command=lambda: self.update_order_list("Cyan"))
+            cyan_button.pack(pady=4)
         if experiment_level_number >= 5:
             orange_button = tk.Button(popup, text="orange", font=("Arial", 15), bg="white", fg="orange", command=lambda: self.update_order_list("Orange"))
             orange_button.pack(pady=4)
@@ -498,6 +530,20 @@ class MyApp:
                     x, y = self.blue_color_location
                 elif i == "Lime":
                     x, y = self.lime_color_location
+                elif i == "Yellow":
+                    x, y = self.yellow_color_location
+                elif i == "Light Blue":
+                    x, y = self.light_blue_color_location
+                elif i == "Pink":
+                    x, y = self.pink_color_location
+                elif i == "Dark Green":
+                    x, y = self.dark_green_color_location
+                elif i == "Cyan":
+                    x, y = self.cyan_color_location
+                elif i == "Orange":
+                    x, y = self.orange_color_location
+                elif i == "Purple":
+                    x, y = self.purple_color_location
                 else:
                     print("Error: invalid color")
             except ValueError:
