@@ -3,7 +3,7 @@ from pynput import mouse
 from time import sleep
 import pydirectinput
 import screeninfo
-import pyautogui
+from PIL import ImageGrab, Image
 import os
 
 class MyApp:
@@ -43,9 +43,13 @@ class MyApp:
         self.screen_region_var.set(False)
         self.experimental_menu.add_checkbutton(label="Screen Region", variable=self.screen_region_var, onvalue=True, offvalue=False)
 
+        self.auto_detect_var = tk.BooleanVar()
+        self.auto_detect_var.set(False)
+        self.experimental_menu.add_checkbutton(label="Auto Detect", variable=self.auto_detect_var, onvalue=True, offvalue=False)
+
         if not os.path.isfile("file_memory.txt"):
             with open("file_memory.txt", "w+") as file:
-                file.write("False\n0\n0\n0\n0\n")
+                file.write("False\n0\n0\n0\n0\n0\n0\n")
 
         with open("file_memory.txt", "r") as file:
             lines = file.readlines()
@@ -53,6 +57,7 @@ class MyApp:
                 if lines[0].strip() == "True": self.screen_region_var.set(True)
                 self.top_left_corner = int(lines[1].strip()), int(lines[2].strip())
                 self.bottom_right_corner = int(lines[3].strip()), int(lines[4].strip())
+                self.clock_pixel_location = int(lines[5].strip()), int(lines[6].strip())
 
         # Initialize the recording variable
         self.recording = False
@@ -68,6 +73,17 @@ class MyApp:
         self.cyan_color_location = ()
         self.orange_color_location = ()
         self.purple_color_location = ()
+        self.red_pixel_location = ()
+        self.blue_pixel_location = ()
+        self.lime_pixel_location = ()
+        self.yellow_pixel_location = ()
+        self.light_blue_pixel_location = ()
+        self.pink_pixel_location = ()
+        self.dark_green_pixel_location = ()
+        self.cyan_pixel_location = ()
+        self.orange_pixel_location = ()
+        self.purple_pixel_location = ()
+        self.clock_pixel_location = [0, 0]
 
         # Initialize the screen size variables
         self.getscreensize()
@@ -79,6 +95,16 @@ class MyApp:
         This function will return the size of the screen
         """
         self.screen_height, self.screen_width = screeninfo.get_monitors()[0].height, screeninfo.get_monitors()[0].width
+
+    def get_pixel_color_sum(self, x, y):
+        try:
+            img = Image.open("screenshot.png")
+            pixel = img.getpixel((x, y))
+            rgb_sum = pixel[0] + pixel[1] + pixel[2]
+            return rgb_sum
+        except FileNotFoundError:
+            return None
+
 
     def destroy_wigets(self):
         try:
@@ -351,26 +377,48 @@ class MyApp:
         
         if experiment_level_number >= 1:
             self.red_color_location = self.top_left_corner[0] + x_distance_between_colors / 2, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.red_pixel_location = x_distance_between_colors / 2, y_distance_between_colors * 1.5
             self.blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 1.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.blue_pixel_location = x_distance_between_colors * 1.5, y_distance_between_colors * 1.5
             self.lime_color_location = self.top_left_corner[0] + x_distance_between_colors * 2.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.lime_pixel_location = x_distance_between_colors * 2.5, y_distance_between_colors * 1.5
         if experiment_level_number >= 2:
             self.yellow_color_location = self.top_left_corner[0] + x_distance_between_colors * 3.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.yellow_pixel_location = x_distance_between_colors * 3.5, y_distance_between_colors * 1.5
             self.light_blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.light_blue_pixel_location = x_distance_between_colors * 4.5, y_distance_between_colors * 1.5
         if experiment_level_number >= 3:
             self.pink_color_location = self.top_left_corner[0] + x_distance_between_colors * 5.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.pink_pixel_location = x_distance_between_colors * 5.5, y_distance_between_colors * 1.5
             self.dark_green_color_location = self.top_left_corner[0] + x_distance_between_colors * 6.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.dark_green_pixel_location = x_distance_between_colors * 6.5, y_distance_between_colors * 1.5
         if experiment_level_number >= 4:
             self.light_blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 1.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.light_blue_pixel_location = x_distance_between_colors * 1.5, y_distance_between_colors * 2.5
             self.pink_color_location = self.top_left_corner[0] + x_distance_between_colors * 2.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.pink_pixel_location = x_distance_between_colors * 2.5, y_distance_between_colors * 2.5
             self.dark_green_color_location = self.top_left_corner[0] + x_distance_between_colors * 3.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.dark_green_pixel_location = x_distance_between_colors * 3.5, y_distance_between_colors * 2.5
             self.cyan_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.cyan_pixel_location = x_distance_between_colors * 4.5, y_distance_between_colors * 2.5
         if experiment_level_number >= 5:
             self.light_blue_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 1.5
+            self.light_blue_pixel_location = x_distance_between_colors * 4.5, y_distance_between_colors * 1.5
             self.pink_color_location = self.top_left_corner[0] + x_distance_between_colors / 2, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.pink_pixel_location = x_distance_between_colors / 2, y_distance_between_colors * 2.5
             self.dark_green_color_location = self.top_left_corner[0] + x_distance_between_colors * 1.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.dark_green_pixel_location = x_distance_between_colors * 1.5, y_distance_between_colors * 2.5
             self.cyan_color_location = self.top_left_corner[0] + x_distance_between_colors * 2.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.cyan_pixel_location = x_distance_between_colors * 2.5, y_distance_between_colors * 2.5
             self.orange_color_location = self.top_left_corner[0] + x_distance_between_colors * 3.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.orange_pixel_location = x_distance_between_colors * 3.5, y_distance_between_colors * 2.5
             self.purple_color_location = self.top_left_corner[0] + x_distance_between_colors * 4.5, self.top_left_corner[1] + y_distance_between_colors * 2.5
+            self.purple_pixel_location = x_distance_between_colors * 4.5, y_distance_between_colors * 2.5
+
+        with open("file_memory.txt", "r") as file:
+            lines = file.readlines()
+            self.clock_pixel_location[0] = int(lines[5].strip())
+            self.clock_pixel_location[1] = int(lines[6].strip()) 
 
     def update_color_location(self, color=None, x=None, y=None):
         if color == None or x == None or y == None:
@@ -395,6 +443,8 @@ class MyApp:
             self.orange_color_location = (x, y)
         elif color == "Purple":
             self.purple_color_location = (x, y)
+        elif color == "Clock":
+            self.clock_pixel_location = (x, y)
         else:
             print("Error: invalid color")
             return
@@ -466,65 +516,99 @@ class MyApp:
     def start_solver_popup(self, experiment_level="High"):
         popup = tk.Toplevel(self.root)
         popup.title(experiment_level + " Experiment Solver")
-        if experiment_level == "High": # Set the size of the popup window based on the experiment level (for now they are all the same size)
-            popup.geometry("250x350")  
-        elif experiment_level == "Grand":
-            popup.geometry("250x370")
-        elif experiment_level == "Supreme":
-            popup.geometry("250x460")
-        elif experiment_level == "Transcendent":
-            popup.geometry("250x520")
-        elif experiment_level == "Metaphysical":
-            popup.geometry("250x610")
 
-        label = tk.Label(popup, text="Add Next Color", font=("Arial", 16))
-        label.pack(pady=20)
+        if self.auto_detect_var.get():
+            popup.geometry("250x350")
 
-        if experiment_level == "High":
-            experiment_level_number = 1
-        elif experiment_level == "Grand":
-            experiment_level_number = 2
-        elif experiment_level == "Supreme":
-            experiment_level_number = 3
-        elif experiment_level == "Transcendent":
-            experiment_level_number = 4
-        elif experiment_level == "Metaphysical":
-            experiment_level_number = 5
+            label = tk.Label(popup, text="Hit the start button (built in 1 sec delay)", font=("Arial", 16))
+            label.pack(pady=20)
 
-        if experiment_level_number >= 1:
-            red_button = tk.Button(popup, text="red", font=("Arial", 15), bg="white", fg="red", command=lambda: self.update_order_list("Red"))
-            red_button.pack(pady=4)
-            blue_button = tk.Button(popup, text="blue", font=("Arial", 15), bg="white", fg="blue", command=lambda: self.update_order_list("Blue"))
-            blue_button.pack(pady=4)
-            lime_button = tk.Button(popup, text="lime", font=("Arial", 15), bg="white", fg="lime", command=lambda: self.update_order_list("Lime"))
-            lime_button.pack(pady=4)
-        if experiment_level_number >= 2:
-            yellow_button = tk.Button(popup, text="yellow", font=("Arial", 15), bg="white", fg="yellow", command=lambda: self.update_order_list("Yellow"))
-            yellow_button.pack(pady=4)
-            light_blue_button = tk.Button(popup, text="Light Blue", font=("Arial", 15), bg="white", fg="light blue", command=lambda: self.update_order_list("Light_Blue"))
-            light_blue_button.pack(pady=4)
-        if experiment_level_number >= 3:
-            pink_button = tk.Button(popup, text="pink", font=("Arial", 15), bg="white", fg="pink", command=lambda: self.update_order_list("Pink"))
-            pink_button.pack(pady=4)
-            dark_green_button = tk.Button(popup, text="dark green", font=("Arial", 15), bg="white", fg="dark green", command=lambda: self.update_order_list("Dark_Green"))
-            dark_green_button.pack(pady=4)
-        if experiment_level_number >= 4:
-            cyan_button = tk.Button(popup, text="cyan", font=("Arial", 15), bg="white", fg="cyan", command=lambda: self.update_order_list("Cyan"))
-            cyan_button.pack(pady=4)
-        if experiment_level_number >= 5:
-            orange_button = tk.Button(popup, text="orange", font=("Arial", 15), bg="white", fg="orange", command=lambda: self.update_order_list("Orange"))
-            orange_button.pack(pady=4)
-            purple_button = tk.Button(popup, text="purple", font=("Arial", 15), bg="white", fg="purple", command=lambda: self.update_order_list("Purple"))
-            purple_button.pack(pady=4)
+            clock_location_button = tk.Button(popup, text="Clock Location", font=("Arial", 15), bg="white", fg="black", command=lambda: self.update_clock_location())
+            clock_location_button.pack(pady=4)
+
+            start_button = tk.Button(popup, text="Start", font=("Arial", 15), bg="white", fg="black", command=lambda: self.run_auto_solver())
+            start_button.pack(pady=4)
+        else:
+
+            if experiment_level == "High": # Set the size of the popup window based on the experiment level
+                popup.geometry("250x350")  
+            elif experiment_level == "Grand":
+                popup.geometry("250x370")
+            elif experiment_level == "Supreme":
+                popup.geometry("250x460")
+            elif experiment_level == "Transcendent":
+                popup.geometry("250x520")
+            elif experiment_level == "Metaphysical":
+                popup.geometry("250x610")
+
+            label = tk.Label(popup, text="Add Next Color", font=("Arial", 16))
+            label.pack(pady=20)
+
+            if experiment_level == "High":
+                experiment_level_number = 1
+            elif experiment_level == "Grand":
+                experiment_level_number = 2
+            elif experiment_level == "Supreme":
+                experiment_level_number = 3
+            elif experiment_level == "Transcendent":
+                experiment_level_number = 4
+            elif experiment_level == "Metaphysical":
+                experiment_level_number = 5
+
+            if experiment_level_number >= 1:
+                red_button = tk.Button(popup, text="red", font=("Arial", 15), bg="white", fg="red", command=lambda: self.update_order_list("Red"))
+                red_button.pack(pady=4)
+                blue_button = tk.Button(popup, text="blue", font=("Arial", 15), bg="white", fg="blue", command=lambda: self.update_order_list("Blue"))
+                blue_button.pack(pady=4)
+                lime_button = tk.Button(popup, text="lime", font=("Arial", 15), bg="white", fg="lime", command=lambda: self.update_order_list("Lime"))
+                lime_button.pack(pady=4)
+            if experiment_level_number >= 2:
+                yellow_button = tk.Button(popup, text="yellow", font=("Arial", 15), bg="white", fg="yellow", command=lambda: self.update_order_list("Yellow"))
+                yellow_button.pack(pady=4)
+                light_blue_button = tk.Button(popup, text="Light Blue", font=("Arial", 15), bg="white", fg="light blue", command=lambda: self.update_order_list("Light_Blue"))
+                light_blue_button.pack(pady=4)
+            if experiment_level_number >= 3:
+                pink_button = tk.Button(popup, text="pink", font=("Arial", 15), bg="white", fg="pink", command=lambda: self.update_order_list("Pink"))
+                pink_button.pack(pady=4)
+                dark_green_button = tk.Button(popup, text="dark green", font=("Arial", 15), bg="white", fg="dark green", command=lambda: self.update_order_list("Dark_Green"))
+                dark_green_button.pack(pady=4)
+            if experiment_level_number >= 4:
+                cyan_button = tk.Button(popup, text="cyan", font=("Arial", 15), bg="white", fg="cyan", command=lambda: self.update_order_list("Cyan"))
+                cyan_button.pack(pady=4)
+            if experiment_level_number >= 5:
+                orange_button = tk.Button(popup, text="orange", font=("Arial", 15), bg="white", fg="orange", command=lambda: self.update_order_list("Orange"))
+                orange_button.pack(pady=4)
+                purple_button = tk.Button(popup, text="purple", font=("Arial", 15), bg="white", fg="purple", command=lambda: self.update_order_list("Purple"))
+                purple_button.pack(pady=4)
 
         close_button = tk.Button(popup, text="Close", font=("Arial", 14), command=popup.destroy)
         close_button.pack(pady=10)
 
         popup.bind("<Escape>", lambda e: popup.destroy())
     
-    def run_solver(self):
-        order = self.order_label.cget("text")[15:]
-        order = order.split(" ")[:-1]
+    def update_clock_location(self):
+        self.recording = True
+        self.mouse_listener = mouse.Listener(on_click=self.select_clock_location)
+        self.mouse_listener.start()
+
+    def select_clock_location(self, x, y, button, pressed):
+        if self.recording and button == mouse.Button.left and pressed:
+            self.update_color_location("Clock", x, y)
+            self.recording = False
+        with open("file_memory.txt", "r") as file:
+            lines = file.readlines()
+            lines[5] = str(x) + "\n"
+            lines[6] = str(y) + "\n"
+        with open("file_memory.txt", "w+") as file:
+            file.writelines(lines)
+    
+    def run_solver(self, given_order=None):
+        if given_order == None:
+            order = self.order_label.cget("text")[15:]
+            order = order.split(" ")[:-1]
+        else:
+            order = given_order
+
         for i in order:
             sleep(0.5)
             try:
@@ -555,8 +639,118 @@ class MyApp:
                 return
             self.MouseMoveTo(x, y)
             pydirectinput.click()
+            self.MouseMoveTo(100, 100)
         
+    def run_auto_solver(self):
+        for i in range(3):
+            order = []
+            while True:
 
+                # Define the coordinates of the top left and bottom right corners of the section to capture
+                left = self.top_left_corner[0]
+                top = self.top_left_corner[1]
+                right = self.bottom_right_corner[0]
+                bottom = self.bottom_right_corner[1]
+
+                # Capture the section of the screen and save it as "screenshot.png"
+                ImageGrab.grab(bbox=(left, top, right, bottom)).save("screenshot.png")
+
+
+                # uses red_pixel_location and checks hex value of pixel
+                try:
+                    if self.get_pixel_color_sum(self.red_pixel_location[0], self.red_pixel_location[1]) <= 120 :
+                        order.append("Red")
+                        sleep(0.5)
+                except:
+                    pass
+                # checks blue_pixel_location
+                try:
+                    if self.get_pixel_color_sum(self.blue_pixel_location[0], self.blue_pixel_location[1]) <= 120:
+                        order.append("Blue")
+                        sleep(0.5)
+                except:
+                    pass
+                # checks lime_pixel_location
+                try:
+                    if self.get_pixel_color_sum(self.lime_pixel_location[0], self.lime_pixel_location[1]) <= 120:
+                        order.append("Lime")
+                        sleep(0.5)
+                except:
+                    pass
+                # checks yellow_pixel_location
+                try:
+                    if self.get_pixel_color_sum(self.yellow_pixel_location[0], self.yellow_pixel_location[1]) <= 120:
+                        order.append("Yellow")
+                        sleep(0.5)
+                except:
+                    pass
+                # checks light_blue_pixel_location
+                try:
+                    if self.get_pixel_color_sum(self.light_blue_pixel_location[0], self.light_blue_pixel_location[1]) <= 120:
+                        order.append("Light Blue")
+                        sleep(0.5)
+                except:
+                    pass
+                # checks pink_pixel_location
+                try:
+                    if self.get_pixel_color_sum(self.pink_pixel_location[0], self.pink_pixel_location[1]) <= 120:
+                        order.append("Pink")
+                        sleep(0.5)
+                except:
+                    pass
+                # checks dark_green_pixel_location
+                try:
+                    if self.get_pixel_color_sum(self.dark_green_pixel_location[0], self.dark_green_pixel_location[1]) <= 120:
+                        order.append("Dark Green")
+                        sleep(0.5)
+                except:
+                    pass
+                # checks cyan_pixel_location
+                try:
+                    if self.get_pixel_color_sum(self.cyan_pixel_location[0], self.cyan_pixel_location[1]) <= 120:
+                        order.append("Cyan")
+                        sleep(0.5)
+                except:
+                    pass
+                # checks orange_pixel_location
+                try:
+                    if self.get_pixel_color_sum(self.orange_pixel_location[0], self.orange_pixel_location[1]) <= 120:
+                        order.append("Orange")
+                        sleep(0.5)
+                except:
+                    pass
+                # checks purple_pixel_location
+                try:
+                    if self.get_pixel_color_sum(self.purple_pixel_location[0], self.purple_pixel_location[1]) <= 120:
+                        order.append("Purple")
+                except:
+                    pass
+                # if no color is found, then it waits 100 miliseconds and tries again
+
+                if len(order) == i + 1:
+                    break
+
+            # Run solver after delay
+            print(order)
+            self.wait_till_clock()
+            self.run_solver(order)
+        print("Done")
+
+    def wait_till_clock(self):
+        while True:
+            # Define the coordinates of the top left and bottom right corners of the section to capture
+            left = self.clock_pixel_location[0] - 1
+            top = self.clock_pixel_location[1] - 1
+            right = self.clock_pixel_location[0] + 1
+            bottom = self.clock_pixel_location[1] + 1
+
+            # Capture the section of the screen and save it as "screenshot.png"
+            ImageGrab.grab(bbox=(left, top, right, bottom)).save("screenshot.png")
+
+            # uses clock_pixel_location and checks hex value of pixel
+            if self.get_pixel_color_sum(1, 1) <= 120:
+                break
+            sleep(0.1)
 
     def update_order_list(self, color=None):
         if color == None:
